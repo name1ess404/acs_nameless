@@ -1,14 +1,16 @@
 import sys
 import os
-from flask import Flask, render_template, request, redirect, url_for, send_from_directory
-import threading
-from core.downloader import download_song
 
+# Make the parent directory of 'web/' visible to Python
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-sys.path.insert(0, BASE_DIR)
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
+
+from flask import Flask, render_template, request, redirect
+from core.downloader import download_song
+import threading
 
 app = Flask(__name__, template_folder="templates")
-DOWNLOAD_DIR = os.path.join("static", "downloads")
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -16,24 +18,14 @@ def index():
     if request.method == "POST":
         url = request.form.get("url")
         if url:
-            # Run download in a thread
-            def thread_target():
-                files = download_song(url)
-                if files:
-                    print("Downloaded:", files)
-
-            threading.Thread(target=thread_target).start()
-
-            # Show a simple "Downloading..." page or redirect to homepage
-            return render_template("index.html", message="Downloading your song(s)... Check back in a few seconds!")
-
+            threading.Thread(
+                target=download_song,
+                args=(url,)
+            ).start()
+            return redirect("/")
     return render_template("index.html")
 
 
-@app.route("/download/<filename>")
-def download_file(filename):
-    return send_from_directory(DOWNLOAD_DIR, filename, as_attachment=True)
-
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # Use 0.0.0.0 so Render can reach your app
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
