@@ -1,6 +1,5 @@
 import yt_dlp
 import os
-import shutil
 
 def download_song(url, download_folder):
     """
@@ -9,7 +8,6 @@ def download_song(url, download_folder):
     """
     os.makedirs(download_folder, exist_ok=True)
 
-    # Use yt-dlp to get actual output filenames
     opts = {
         'format': 'bestaudio[ext=m4a]/bestaudio/best',
         'ignoreerrors': True,
@@ -29,7 +27,6 @@ def download_song(url, download_folder):
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(url, download=True)
 
-            # info can be a playlist or single video
             if 'entries' in info:  # playlist
                 for entry in info['entries']:
                     if entry is None:
@@ -46,7 +43,7 @@ def download_song(url, download_folder):
         print(f"Download failed for URL: {url}")
         print(e)
 
-    # Verify files exist (sometimes yt-dlp fails silently)
+    # Verify files exist
     downloaded_files = [f for f in downloaded_files if os.path.isfile(os.path.join(download_folder, f))]
 
     return downloaded_files
