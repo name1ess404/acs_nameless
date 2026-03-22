@@ -1,15 +1,18 @@
 import sys
 import os
 import shutil
-from flask import Flask, render_template, request, send_from_directory
-from core.downloader import download_song
-from tempfile import mkdtemp
-import zipfile
 
-# Make parent directory visible to Python
+# -----------------------
+# Add parent directory so Python can see 'core'
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
+# -----------------------
+
+from flask import Flask, render_template, request, send_from_directory
+from core.downloader import download_song  # NOW this will work
+from tempfile import mkdtemp
+import zipfile
 
 app = Flask(__name__, template_folder="templates")
 
