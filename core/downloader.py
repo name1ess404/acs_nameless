@@ -3,16 +3,11 @@ import os
 import shutil
 
 # ------------------- CONFIG -------------------
-DOWNLOAD_DIR = "downloads"
-TEMP_DIR = ".temp_processing"  # Hidden temp folder
+DOWNLOAD_DIR = os.path.join("web", "static", "downloads")
+TEMP_DIR = os.path.join("web", ".temp_processing")  # Hidden temp folder
 
 # Create hidden temp folder
-if os.name == 'nt':
-    os.makedirs(TEMP_DIR, exist_ok=True)
-    os.system(f'attrib +h {TEMP_DIR}')
-else:
-    os.makedirs(TEMP_DIR, exist_ok=True)
-
+os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
 # Force Deno runtime for yt-dlp
@@ -32,15 +27,17 @@ def download_song(url):
             'preferredquality': '192',
         }],
     }
-    
+
+    downloaded_files = []
+
     try:
+        # Check if it's a playlist
         with yt_dlp.YoutubeDL({'extract_flat': True, 'quiet': True, 'no_warnings': True}) as ydl_flat:
             info = ydl_flat.extract_info(url, download=False)
             is_playlist = 'entries' in info
 
         urls_to_download = []
         if is_playlist:
-            # Use the real webpage_url for each video
             entries = [e for e in info['entries'] if e is not None]
             urls_to_download = [e['url'] if 'url' in e else e['webpage_url'] for e in entries]
         else:
@@ -53,16 +50,23 @@ def download_song(url):
             # Move mp3 to DOWNLOAD_DIR
             for file in os.listdir(TEMP_DIR):
                 if file.endswith(".mp3"):
-                    shutil.move(os.path.join(TEMP_DIR, file), os.path.join(DOWNLOAD_DIR, file))
+                    dest_path = os.path.join(DOWNLOAD_DIR, file)
+                    shutil.move(os.path.join(TEMP_DIR, file), dest_path)
+                    downloaded_files.append(file)
 
             # Clean up leftover files
             for leftover in os.listdir(TEMP_DIR):
                 os.remove(os.path.join(TEMP_DIR, leftover))
 
-    except:
-        pass  # Silent fail, no output
+    except Exception as e:
+        print("Download failed:", e)
 
-# ------------------- MAIN -------------------
+    # Return the list of downloaded files
+    return downloaded_files
+
+
+# ------------------- TEST -------------------
 if __name__ == "__main__":
-    url = input().strip()
-    download_song(url)
+    url = input("Enter YouTube URL: ").strip()
+    files = download_song(url)
+    print("Downloaded files:", files)
