@@ -2,23 +2,29 @@ import yt_dlp
 import os
 import shutil
 
+# ------------------- Folders -------------------
 DOWNLOAD_DIR = "downloads"
 TEMP_DIR = ".temp_processing"
-
-# Create folders
-os.makedirs(TEMP_DIR, exist_ok=True)
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
+os.makedirs(TEMP_DIR, exist_ok=True)
 
 # Force Deno runtime for yt-dlp
 os.environ["YT_DLP_JS_RUNTIME"] = "deno"
 
-def download_song(url):
+def download_song(url, download_folder=None):
+    """
+    Downloads a YouTube video or playlist to the given folder.
+    Returns list of downloaded MP3 filenames.
+    """
+    if download_folder is None:
+        download_folder = DOWNLOAD_DIR
+
     opts = {
         'format': 'bestaudio[ext=m4a]/bestaudio/best',
         'ignoreerrors': True,
         'quiet': True,
         'no_warnings': True,
-        'outtmpl': os.path.join(TEMP_DIR, '%(title)s.%(ext)s'),
+        'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
@@ -26,7 +32,10 @@ def download_song(url):
         }],
     }
 
+    downloaded_files = []
+
     try:
+        # Detect playlist or single video
         with yt_dlp.YoutubeDL({'extract_flat': True, 'quiet': True, 'no_warnings': True}) as ydl_flat:
             info = ydl_flat.extract_info(url, download=False)
             is_playlist = 'entries' in info
@@ -42,12 +51,12 @@ def download_song(url):
             with yt_dlp.YoutubeDL(opts) as ydl_song:
                 ydl_song.download([song_url])
 
-            for file in os.listdir(TEMP_DIR):
-                if file.endswith(".mp3"):
-                    shutil.move(os.path.join(TEMP_DIR, file), os.path.join(DOWNLOAD_DIR, file))
-
-            for leftover in os.listdir(TEMP_DIR):
-                os.remove(os.path.join(TEMP_DIR, leftover))
+            # Collect mp3 files
+            for file in os.listdir(download_folder):
+                if file.endswith(".mp3") and file not in downloaded_files:
+                    downloaded_files.append(file)
 
     except Exception as e:
         print(f"Download failed: {e}")
+
+    return downloaded_files
