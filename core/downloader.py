@@ -2,23 +2,14 @@ import yt_dlp
 import os
 import shutil
 
-# ------------------- Folders -------------------
-DOWNLOAD_DIR = "downloads"
-TEMP_DIR = ".temp_processing"
-os.makedirs(DOWNLOAD_DIR, exist_ok=True)
-os.makedirs(TEMP_DIR, exist_ok=True)
-
-# Force Deno runtime for yt-dlp
-os.environ["YT_DLP_JS_RUNTIME"] = "deno"
-
-def download_song(url, download_folder=None):
+def download_song(url, download_folder):
     """
     Downloads a YouTube video or playlist to the given folder.
     Returns list of downloaded MP3 filenames.
     """
-    if download_folder is None:
-        download_folder = DOWNLOAD_DIR
+    os.makedirs(download_folder, exist_ok=True)
 
+    # Use yt-dlp to get actual output filenames
     opts = {
         'format': 'bestaudio[ext=m4a]/bestaudio/best',
         'ignoreerrors': True,
@@ -35,28 +26,27 @@ def download_song(url, download_folder=None):
     downloaded_files = []
 
     try:
-        # Detect playlist or single video
-        with yt_dlp.YoutubeDL({'extract_flat': True, 'quiet': True, 'no_warnings': True}) as ydl_flat:
-            info = ydl_flat.extract_info(url, download=False)
-            is_playlist = 'entries' in info
+        with yt_dlp.YoutubeDL(opts) as ydl:
+            info = ydl.extract_info(url, download=True)
 
-        urls_to_download = []
-        if is_playlist:
-            entries = [e for e in info['entries'] if e is not None]
-            urls_to_download = [e['url'] if 'url' in e else e['webpage_url'] for e in entries]
-        else:
-            urls_to_download = [url]
-
-        for song_url in urls_to_download:
-            with yt_dlp.YoutubeDL(opts) as ydl_song:
-                ydl_song.download([song_url])
-
-            # Collect mp3 files
-            for file in os.listdir(download_folder):
-                if file.endswith(".mp3") and file not in downloaded_files:
-                    downloaded_files.append(file)
+            # info can be a playlist or single video
+            if 'entries' in info:  # playlist
+                for entry in info['entries']:
+                    if entry is None:
+                        continue
+                    title = entry.get('title')
+                    if title:
+                        downloaded_files.append(f"{title}.mp3")
+            else:  # single video
+                title = info.get('title')
+                if title:
+                    downloaded_files.append(f"{title}.mp3")
 
     except Exception as e:
-        print(f"Download failed: {e}")
+        print(f"Download failed for URL: {url}")
+        print(e)
+
+    # Verify files exist (sometimes yt-dlp fails silently)
+    downloaded_files = [f for f in downloaded_files if os.path.isfile(os.path.join(download_folder, f))]
 
     return downloaded_files
