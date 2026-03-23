@@ -4,25 +4,24 @@ import os
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 def download_song(url, download_folder):
-
     os.makedirs(download_folder, exist_ok=True)
 
+    # Path to your cookies file
+    cookie_path = os.path.join(BASE_DIR, "cookies.txt")
+
     opts = {
-
-        # SAFE FORMAT (important)
         "format": "bestaudio/best",
-
-        # output file
         "outtmpl": os.path.join(download_folder, "%(title)s.%(ext)s"),
+        
+        # --- ADD THIS LINE ---
+        "cookiefile": cookie_path if os.path.exists(cookie_path) else None,
+        # ---------------------
 
-        # FIX NEW YOUTUBE PROTECTION
         "extractor_args": {
             "youtube": {
                 "player_client": ["android", "web"]
             }
         },
-
-        # convert to mp3
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
@@ -30,7 +29,6 @@ def download_song(url, download_folder):
                 "preferredquality": "192",
             }
         ],
-
         "quiet": False,
         "ignoreerrors": False,
     }
