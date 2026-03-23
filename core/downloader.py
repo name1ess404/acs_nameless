@@ -12,14 +12,16 @@ def download_song(url, download_folder):
     opts = {
         "format": "bestaudio/best",
         "outtmpl": os.path.join(download_folder, "%(title)s.%(ext)s"),
-        
-        # --- ADD THIS LINE ---
         "cookiefile": cookie_path if os.path.exists(cookie_path) else None,
-        # ---------------------
+        
+        # This tells yt-dlp to use the Node.js we just "tricked" Render into installing
+        "javascript_executor": "node",
 
         "extractor_args": {
             "youtube": {
-                "player_client": ["android", "web"]
+                # We use 'web_creator' or 'web' because 'android' blocks cookies
+                "player_client": ["web_creator", "web"],
+                "skip": ["dash", "hls"],
             }
         },
         "postprocessors": [
@@ -30,7 +32,7 @@ def download_song(url, download_folder):
             }
         ],
         "quiet": False,
-        "ignoreerrors": False,
+        "nocheckcertificate": True, # Helps with some network errors
     }
 
     downloaded_files = []
