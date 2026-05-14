@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Code Snippet</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            padding: 40px;
+            background-color: #f4f4f9;
+        }
+        .container {
+            width: 100%;
+            max-width: 700px;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        pre {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .status {
+            margin-left: 10px;
+            font-size: 14px;
+            color: green;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Python Input Script</h2>
+    <button onclick="copyCode()" id="copyBtn">Copy Code</button>
+    <span id="status" class="status">Copied!</span>
+    
+    <pre id="pythonCode">
+#name
+while True:
+    name = input("Enter Your Name: ").strip()
+    if name == "":  print("You didn't enter anything!"); continue
+    elif any(char.isdigit() for char in name): print("Name can't contain numbers!"); continue
+    else: break
+    
+#age
+while True:
+    try:
+        age = int(input("Enter Your Age: "))
+        if age <= 0:
+            print("You aren't born yet."); continue
+        elif age >= 120:
+            print("You are already dead."); continue
+        else: break
+
+    except ValueError:
+        print("Input needs to be an number!"); continue
+
+#class
+while True:
+    try:
+        class_ = int(input("Enter Your Class: "))
+        if not(1 <= class_ <= 12):
+            print("That isn't a class."); continue
+        else: break
+    except ValueError:
+        print("Input needs to be an number!"); continue
+
+#printing nicely
+width = max(len(name), len(str(age)), len(str(class_)))
+print() #new line
+
+print("-" * ((width+10) + 3 + 6)) #top bar
+
+print(f"|    Name  :  {name:<{width}}    |")
+print(f"|    Age   :  {age:<{width}}    |")
+print(f"|    Class :  {class_:<{width}}    |")
+
+print("-" * ((width+10) + 3 + 6)) #bottom bar</pre>
+</div>
+
+<script>
+    function copyCode() {
+        // Select the text inside the <pre> tag
+        const codeText = document.getElementById('pythonCode').innerText;
+        
+        // Copy to clipboard
+        navigator.clipboard.writeText(codeText).then(() => {
+            // Show status message
+            const status = document.getElementById('status');
+            status.style.display = 'inline';
+            
+            // Change button text temporarily
+            const btn = document.getElementById('copyBtn');
+            btn.innerText = 'Copied!';
+            
+            // Reset after 2 seconds
+            setTimeout(() => {
+                status.style.display = 'none';
+                btn.innerText = 'Copy Code';
+            }, 2000);
+        });
+    }
+</script>
+
+</body>
+</html>
